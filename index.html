@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#c2410c">
+<title>Birthday Reminder</title>
+<style>
+  :root { --bg:#fff7f0; --card:#ffffff; --ink:#1f2937; --muted:#6b7280; --brand:#c2410c; --brand2:#ea580c; --line:#f1e4d8; --ok:#15803d; --bad:#b91c1c; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); font-size:16px; }
+  header { background:var(--brand); color:#fff; padding:14px 16px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:5; }
+  header h1 { font-size:19px; margin:0; }
+  header button { background:rgba(255,255,255,.18); color:#fff; border:0; border-radius:20px; padding:7px 12px; font-size:14px; }
+  main { padding:14px 16px 90px; max-width:640px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; }
+  h2 { font-size:17px; margin:4px 0 12px; }
+  label { display:block; font-size:14px; color:var(--muted); margin:12px 0 4px; }
+  input, select { width:100%; padding:12px; font-size:16px; border:1px solid #e5d5c5; border-radius:10px; background:#fff; color:var(--ink); }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  .btn { display:block; width:100%; padding:13px; font-size:16px; font-weight:600; border:0; border-radius:10px; background:var(--brand2); color:#fff; margin-top:14px; }
+  a.btn { text-decoration:none; text-align:center; }
+  .btn.ghost { background:#fff; color:var(--brand); border:1.5px solid var(--brand2); }
+  .btn.small { display:inline-block; width:auto; padding:8px 12px; font-size:14px; margin:0; }
+  .btn:disabled { opacity:.5; }
+  .muted { color:var(--muted); font-size:14px; }
+  .item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+  .item:last-child { border-bottom:0; }
+  .icon { font-size:26px; width:36px; text-align:center; }
+  .grow { flex:1; min-width:0; }
+  .name { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .when { font-size:13px; color:var(--muted); }
+  .pill { font-size:12px; padding:3px 8px; border-radius:20px; background:#fde7d6; color:var(--brand); white-space:nowrap; }
+  .pill.today { background:var(--ok); color:#fff; }
+  .x { background:none; border:0; font-size:20px; color:#c4a99a; padding:4px 8px; }
+  nav { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--line); display:flex; z-index:5; }
+  nav button { flex:1; background:none; border:0; padding:10px 0 12px; font-size:12px; color:var(--muted); }
+  nav button span { display:block; font-size:21px; }
+  nav button.on { color:var(--brand); font-weight:600; }
+  .toast { position:fixed; left:16px; right:16px; bottom:80px; background:#111827; color:#fff; padding:12px 14px; border-radius:10px; font-size:14px; display:none; z-index:10; }
+  .check { display:flex; align-items:center; gap:10px; margin-top:12px; font-size:15px; color:var(--ink); }
+  .check input { width:22px; height:22px; }
+  ol { padding-left:20px; margin:8px 0; } ol li { margin:6px 0; font-size:15px; }
+  .hidden { display:none !important; }
+  .warn { background:#fef3c7; border:1px solid #fcd34d; border-radius:10px; padding:10px 12px; font-size:14px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎂 Birthday Reminder</h1>
+  <button id="shareAppBtn" class="hidden">Share app</button>
+</header>
+
+<main>
+  <div id="pickerWarn" class="warn hidden">Contact search works only in <b>Google Chrome on Android</b>. If you opened this link inside WhatsApp, tap ⋮ and choose <b>Open in Chrome</b>. You can still type names and numbers yourself.</div>
+
+  <!-- ============ REGISTER ============ -->
+  <section id="vRegister" class="hidden">
+    <div class="card">
+      <h2>Get a WhatsApp message every morning</h2>
+      <p class="muted">At 6:30 AM, if a friend or relative has a birthday or marriage anniversary that day, you get a WhatsApp message. No login needed.</p>
+      <h2 style="margin-top:18px">Step 1: Get your free WhatsApp key</h2>
+      <ol>
+        <li>Open <a href="https://www.callmebot.com/blog/free-api-whatsapp-messages/" target="_blank" rel="noopener">CallMeBot's page</a> and save the phone number shown there in your contacts.</li>
+        <li>On WhatsApp, send that contact this exact message:<br><b>I allow callmebot to send me messages</b></li>
+        <li>You will get a reply with your <b>API key</b> (a number like 123456). Copy it.</li>
+      </ol>
+      <h2 style="margin-top:18px">Step 2: Fill this in</h2>
+      <label>Your name</label>
+      <input id="rName" placeholder="e.g. Arvind" autocomplete="name">
+      <label>Your WhatsApp number</label>
+      <input id="rPhone" type="tel" placeholder="e.g. 9876543210" autocomplete="tel">
+      <label>CallMeBot API key</label>
+      <input id="rKey" inputmode="numeric" placeholder="e.g. 123456">
+      <button class="btn" id="registerBtn">Start my reminders</button>
+      <p class="muted" style="margin-top:12px">Already using this on another phone? Enter the same number and key and your list comes back.</p>
+    </div>
+  </section>
+
+  <!-- ============ LIST ============ -->
+  <section id="vList" class="hidden">
+    <div class="card" id="todayCard"></div>
+    <div class="card">
+      <input id="search" type="search" placeholder="Search my list…">
+      <div id="list"></div>
+    </div>
+  </section>
+
+  <!-- ============ ADD ============ -->
+  <section id="vAdd" class="hidden">
+    <div class="card">
+      <h2 id="addTitle">Add a birthday or anniversary</h2>
+      <button class="btn ghost" id="pickOneBtn">📇 Search my phone contacts</button>
+      <label>Name</label>
+      <input id="aName" placeholder="e.g. Ramesh Mama">
+      <label>Mobile number (optional, needed for sharing)</label>
+      <input id="aPhone" type="tel" placeholder="e.g. 9876543210">
+      <div id="aHint" class="muted" style="margin-top:6px"></div>
+      <label>What is it?</label>
+      <select id="aType">
+        <option value="birthday">🎂 Birthday</option>
+        <option value="anniversary">💍 Marriage anniversary</option>
+      </select>
+      <div class="row">
+        <div><label>Day</label><select id="aDay"></select></div>
+        <div><label>Month</label><select id="aMonth"></select></div>
+        <div><label>Year (optional)</label><input id="aYear" inputmode="numeric" placeholder="1980"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="aShared" checked> Share this date with friends who also have this number</label>
+      <button class="btn" id="saveBtn">Save</button>
+      <button class="btn ghost hidden" id="cancelEditBtn">Cancel editing</button>
+    </div>
+  </section>
+
+  <!-- ============ SHARED ============ -->
+  <section id="vShared" class="hidden">
+    <div class="card">
+      <h2>Get dates your friends already saved</h2>
+      <p class="muted">Choose people from your phone contacts. If any friend using this app has saved their birthday or anniversary, you can add it to your list in one tap. Only numbers that are in your contacts are matched.</p>
+      <button class="btn" id="pickManyBtn">📇 Choose contacts to check</button>
+      <p class="muted" style="margin-top:10px">Tip: in the contact list, use the search or the "select all" option if your phone shows one.</p>
+    </div>
+    <div class="card hidden" id="matchCard">
+      <h2 id="matchTitle"></h2>
+      <div id="matchList"></div>
+      <button class="btn" id="importBtn">Add selected to my list</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="vSettings" class="hidden">
+    <div class="card">
+      <h2>My settings</h2>
+      <p class="muted" id="meLine"></p>
+      <label>Your name</label>
+      <input id="sName">
+      <label>New CallMeBot API key (only if it changed)</label>
+      <input id="sKey" inputmode="numeric">
+      <button class="btn" id="saveSettingsBtn">Save settings</button>
+      <button class="btn ghost" id="testBtn">Send me a test WhatsApp now</button>
+    </div>
+    <div class="card">
+      <h2>Share this app</h2>
+      <p class="muted">Send the link to friends. Each person uses their own WhatsApp number and key, and gets their own list.</p>
+      <button class="btn ghost" id="shareAppBtn2">Share app link</button>
+    </div>
+    <div class="card">
+      <button class="btn ghost" id="logoutBtn">Sign out of this phone</button>
+      <p class="muted" style="margin-top:8px">Your list stays saved. Enter your number and key again to come back.</p>
+    </div>
+  </section>
+</main>
+
+<nav id="nav" class="hidden">
+  <button data-v="vList" class="on"><span>📅</span>My list</button>
+  <button data-v="vAdd"><span>➕</span>Add</button>
+  <button data-v="vShared"><span>🤝</span>Shared</button>
+  <button data-v="vSettings"><span>⚙️</span>Settings</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====== PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BETWEEN THE QUOTES ====== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbzKiD3vezYtvfER1X1nAVmKCRfbPBX8ya-2eZ7VlF6A93RJu2hIeDOaZCDly-HWC1lp/exec';
+/* ========================================================================= */
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const $ = id => document.getElementById(id);
+const hasPicker = 'contacts' in navigator && 'ContactsManager' in window;
+let me = load();
+let events = [];
+let editingId = null;
+let matches = [];
+let pickedNames = {};   // phone(last 10) -> name in MY contacts
+
+function load() { try { return JSON.parse(localStorage.getItem('br_user') || 'null'); } catch (e) { return null; } }
+function save(u) { try { u ? localStorage.setItem('br_user', JSON.stringify(u)) : localStorage.removeItem('br_user'); } catch (e) {} }
+function norm(p) { const d = String(p || '').replace(/\D/g, ''); return d.length >= 10 ? d.slice(-10) : ''; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function toast(msg, ms) {
+  const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toast.h); toast.h = setTimeout(() => (t.style.display = 'none'), ms || 3000);
+}
+
+async function api(action, data) {
+  if (API_URL.indexOf('http') !== 0) throw new Error('App not configured: paste the Web app URL into index.html');
+  const body = Object.assign({ action }, data || {}, me ? { userId: me.userId, token: me.token } : {});
+  const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+  const out = await res.json();
+  if (!out.ok) throw new Error(out.error || 'Something went wrong');
+  return out;
+}
+
+async function busy(btn, fn) {
+  const old = btn.textContent; btn.disabled = true; btn.textContent = 'Please wait…';
+  try { await fn(); } catch (e) { toast(e.message, 5000); } finally { btn.disabled = false; btn.textContent = old; }
+}
+
+/* ---------- views ---------- */
+function show(v) {
+  ['vRegister','vList','vAdd','vShared','vSettings'].forEach(id => $(id).classList.toggle('hidden', id !== v));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => { if (b.dataset.v === 'vAdd' && editingId) resetForm(); show(b.dataset.v); });
+
+/* ---------- dates ---------- */
+function daysUntil(day, month) {
+  const now = new Date(); const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let y = today.getFullYear();
+  const next = yr => {
+    let d = day;
+    if (month === 2 && day === 29 && !((yr % 4 === 0 && yr % 100 !== 0) || yr % 400 === 0)) d = 28;
+    return new Date(yr, month - 1, d);
+  };
+  let n = next(y); if (n < today) n = next(y + 1);
+  return { days: Math.round((n - today) / 86400000), year: n.getFullYear() };
+}
+function whenText(e) {
+  const u = daysUntil(e.day, e.month);
+  let s = e.day + ' ' + MONTHS[e.month - 1];
+  if (e.year) {
+    const n = u.year - e.year;
+    if (n > 0) s += e.type === 'birthday' ? ' · turns ' + n : ' · ' + n + ' years';
+  }
+  return { text: s, days: u.days };
+}
+
+/* ---------- list ---------- */
+function renderList() {
+  const q = $('search').value.trim().toLowerCase();
+  const sorted = events.map(e => Object.assign({ w: whenText(e) }, e)).sort((a, b) => a.w.days - b.w.days);
+  const todays = sorted.filter(e => e.w.days === 0);
+  $('todayCard').innerHTML = todays.length
+    ? '<h2>🎉 Today</h2>' + todays.map(e => '<div class="item"><div class="icon">' + (e.type === 'birthday' ? '🎂' : '💍') + '</div><div class="grow"><div class="name">' + esc(e.personName) + '</div><div class="when">' + esc(e.w.text) + '</div></div>' +
+        (e.personPhone ? '<a class="btn small" href="https://wa.me/91' + e.personPhone + '" target="_blank" rel="noopener">Wish</a>' : '') + '</div>').join('')
+    : '<h2>Nothing today</h2><p class="muted">You have ' + events.length + ' date' + (events.length === 1 ? '' : 's') + ' saved. You will get a WhatsApp at 6:30 AM on each day.</p>';
+
+  const shown = sorted.filter(e => !q || e.personName.toLowerCase().includes(q) || (e.personPhone || '').includes(q));
+  $('list').innerHTML = shown.length ? shown.map(e =>
+    '<div class="item" data-id="' + e.eventId + '"><div class="icon">' + (e.type === 'birthday' ? '🎂' : '💍') + '</div>' +
+    '<div class="grow edit"><div class="name">' + esc(e.personName) + '</div><div class="when">' + esc(e.w.text) + (e.shared ? ' · shared' : '') + '</div></div>' +
+    '<span class="pill ' + (e.w.days === 0 ? 'today' : '') + '">' + (e.w.days === 0 ? 'Today' : e.w.days === 1 ? 'Tomorrow' : 'in ' + e.w.days + ' days') + '</span>' +
+    '<button class="x" title="Delete">✕</button></div>').join('')
+    : '<p class="muted" style="margin-top:12px">' + (events.length ? 'No match.' : 'Your list is empty. Tap ➕ Add, or 🤝 Shared to pick up dates friends have saved.') + '</p>';
+}
+$('search').oninput = renderList;
+$('list').onclick = async ev => {
+  const row = ev.target.closest('.item'); if (!row) return;
+  const e = events.find(x => x.eventId === row.dataset.id);
+  if (ev.target.classList.contains('x')) {
+    if (!window.confirm('Delete ' + e.personName + '?')) return;
+    try { await api('deleteEvent', { eventId: e.eventId }); events = events.filter(x => x !== e); renderList(); toast('Deleted'); }
+    catch (err) { toast(err.message, 5000); }
+  } else if (ev.target.closest('.edit')) startEdit(e);
+};
+
+async function refresh() {
+  const out = await api('listEvents');
+  events = out.events;
+  if (out.profile) { me.name = out.profile.name; me.phone = out.profile.phone; save(me); }
+  renderList();
+}
+
+/* ---------- add / edit ---------- */
+for (let d = 1; d <= 31; d++) $('aDay').add(new Option(d, d));
+MONTHS.forEach((m, i) => $('aMonth').add(new Option(m, i + 1)));
+
+function resetForm() {
+  editingId = null;
+  $('aName').value = ''; $('aPhone').value = ''; $('aYear').value = ''; $('aHint').textContent = '';
+  $('aType').value = 'birthday'; $('aDay').value = 1; $('aMonth').value = 1; $('aShared').checked = true;
+  $('addTitle').textContent = 'Add a birthday or anniversary'; $('saveBtn').textContent = 'Save';
+  $('cancelEditBtn').classList.add('hidden');
+}
+function startEdit(e) {
+  editingId = e.eventId;
+  $('aName').value = e.personName; $('aPhone').value = e.personPhone || ''; $('aType').value = e.type;
+  $('aDay').value = e.day; $('aMonth').value = e.month; $('aYear').value = e.year || ''; $('aShared').checked = e.shared;
+  $('addTitle').textContent = 'Edit ' + e.personName; $('saveBtn').textContent = 'Save changes';
+  $('cancelEditBtn').classList.remove('hidden'); $('aHint').textContent = '';
+  show('vAdd');
+}
+$('cancelEditBtn').onclick = () => { resetForm(); show('vList'); };
+
+$('pickOneBtn').onclick = async () => {
+  if (!hasPicker) return toast('Contact search needs Google Chrome on Android. Please type the details.', 5000);
+  try {
+    const picked = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+    if (!picked.length) return;
+    const c = picked[0];
+    $('aName').value = (c.name && c.name[0]) || '';
+    const tel = (c.tel || []).map(norm).find(Boolean) || '';
+    $('aPhone').value = tel;
+    $('aHint').textContent = '';
+    if (tel) {
+      const out = await api('matchShared', { phones: [tel] });
+      const m = out.matches.find(x => x.type === $('aType').value) || out.matches[0];
+      if (m) {
+        $('aType').value = m.type; $('aDay').value = m.day; $('aMonth').value = m.month; $('aYear').value = m.year || '';
+        $('aHint').textContent = '✨ A friend already saved this ' + m.type + ' — the date is filled in for you.';
+      }
+    }
+  } catch (e) { toast(e.message, 5000); }
+};
+
+$('saveBtn').onclick = () => busy($('saveBtn'), async () => {
+  const data = { personName: $('aName').value, personPhone: $('aPhone').value, type: $('aType').value,
+    day: $('aDay').value, month: $('aMonth').value, year: $('aYear').value.trim(), shared: $('aShared').checked };
+  if (editingId) data.eventId = editingId;
+  await api('addEvent', data);
+  toast(editingId ? 'Updated' : 'Saved ' + data.personName.trim());
+  resetForm(); await refresh(); show('vList');
+});
+
+/* ---------- shared ---------- */
+$('pickManyBtn').onclick = () => busy($('pickManyBtn'), async () => {
+  if (!hasPicker) throw new Error('Contact search needs Google Chrome on Android.');
+  const picked = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+  if (!picked.length) return;
+  pickedNames = {};
+  picked.forEach(c => (c.tel || []).forEach(t => { const n = norm(t); if (n && !pickedNames[n]) pickedNames[n] = (c.name && c.name[0]) || ''; }));
+  const phones = Object.keys(pickedNames);
+  if (!phones.length) throw new Error('The chosen contacts have no mobile numbers.');
+  const out = await api('matchShared', { phones });
+  matches = out.matches;
+  $('matchCard').classList.remove('hidden');
+  $('matchTitle').textContent = matches.length ? 'Found ' + matches.length + ' date' + (matches.length === 1 ? '' : 's') : 'No new dates found';
+  $('matchList').innerHTML = matches.length ? matches.map((m, i) =>
+    '<label class="item" style="margin:0"><input type="checkbox" checked data-i="' + i + '" style="width:22px;height:22px">' +
+    '<div class="icon">' + (m.type === 'birthday' ? '🎂' : '💍') + '</div><div class="grow"><div class="name">' + esc(pickedNames[m.personPhone] || m.personPhone) + '</div>' +
+    '<div class="when">' + m.day + ' ' + MONTHS[m.month - 1] + (m.year ? ' ' + m.year : '') + ' · ' + m.type + (m.sources > 1 ? ' · saved by ' + m.sources + ' friends' : '') + '</div></div></label>').join('')
+    : '<p class="muted">None of your friends have saved dates for these contacts yet (or you already have them).</p>';
+  $('importBtn').classList.toggle('hidden', !matches.length);
+});
+
+$('importBtn').onclick = () => busy($('importBtn'), async () => {
+  const items = [...$('matchList').querySelectorAll('input:checked')].map(cb => {
+    const m = matches[+cb.dataset.i]; return { eventId: m.eventId, personName: pickedNames[m.personPhone] || '' };
+  });
+  if (!items.length) throw new Error('Nothing selected');
+  const out = await api('importShared', { items });
+  toast('Added ' + out.added + ' to your list');
+  $('matchCard').classList.add('hidden');
+  await refresh(); show('vList');
+});
+
+/* ---------- register / settings ---------- */
+$('registerBtn').onclick = () => busy($('registerBtn'), async () => {
+  me = null;
+  const out = await api('register', { name: $('rName').value, phone: $('rPhone').value, apikey: $('rKey').value });
+  me = { userId: out.userId, token: out.token, name: out.name, phone: out.phone };
+  save(me);
+  await start();
+  toast('Welcome ' + (me.name || '') + '! Try Settings → Send me a test WhatsApp.', 5000);
+});
+
+$('saveSettingsBtn').onclick = () => busy($('saveSettingsBtn'), async () => {
+  await api('updateProfile', { name: $('sName').value, apikey: $('sKey').value.trim() });
+  $('sKey').value = ''; me.name = $('sName').value; save(me); toast('Settings saved');
+});
+$('testBtn').onclick = () => busy($('testBtn'), async () => {
+  const out = await api('testMessage');
+  toast('Sent. Check WhatsApp in a minute. (' + out.result.slice(0, 80) + ')', 6000);
+});
+$('logoutBtn').onclick = () => { if (window.confirm('Sign out of this phone?')) { save(null); me = null; boot(); } };
+
+async function shareApp() {
+  const url = location.href.split('#')[0].split('?')[0];
+  const text = 'I use this free app to get a WhatsApp reminder at 6:30 AM for birthdays and anniversaries. Open it in Chrome: ';
+  if (navigator.share) { try { await navigator.share({ title: 'Birthday Reminder', text, url }); } catch (e) {} }
+  else window.open('https://wa.me/?text=' + encodeURIComponent(text + url), '_blank');
+}
+$('shareAppBtn').onclick = shareApp; $('shareAppBtn2').onclick = shareApp;
+
+async function start() {
+  $('nav').classList.remove('hidden'); $('shareAppBtn').classList.remove('hidden');
+  $('sName').value = me.name || ''; $('meLine').textContent = 'Reminders go to WhatsApp ' + (me.phone || '');
+  show('vList');
+  $('todayCard').innerHTML = '<p class="muted">Loading…</p>';
+  try { await refresh(); $('sName').value = me.name || ''; } catch (e) {
+    toast(e.message, 6000);
+    if (/register/i.test(e.message)) { save(null); me = null; boot(); }
+  }
+}
+function boot() {
+  $('pickerWarn').classList.toggle('hidden', hasPicker);
+  if (me) start();
+  else { $('nav').classList.add('hidden'); $('shareAppBtn').classList.add('hidden'); show('vRegister'); }
+}
+boot();
+</script>
+</body>
+</html>
